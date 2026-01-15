@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DINOv2 图像检索系统 - 图片检索</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #F9F2EF; /* 背景色 */
+            color: #333; /* 文字黑色 */
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            background-color: #FCCEB4; /* 导航栏颜色 */
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            background: linear-gradient(135deg, #F98C53 0%, #FCCEB4 100%);
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .logo-text h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .logo-text .subtitle {
+            font-size: 0.95rem;
+            color: #666;
+            opacity: 0.8;
+        }
+        
+        .nav-center {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .nav-tabs {
+            display: inline-flex;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 5px;
+        }
+        
+        .nav-tab {
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #666;
+            text-decoration: none;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #333;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .nav-right {
+            display: flex;
+            gap: 25px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 25px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            padding: 40px;
+        }
+        
+        /* 上传区域 */
+        .upload-section {
+            background: linear-gradient(135deg, #FCCEB4 0%, rgba(252, 206, 180, 0.1) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            text-align: center;
+            border: 2px dashed rgba(249, 140, 83, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            border-color: #F98C53;
+            background: linear-gradient(135deg, #FCCEB4 0%, rgba(252, 206, 180, 0.2) 100%);
+        }
+        
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #D2E0AA 0%, #a8c97f 100%); /* 上传按键颜色 */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .upload-text h2 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .upload-text p {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+        
+        .upload-form {
+            margin: 20px 0;
+        }
+        
+        .file-input-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #D2E0AA 0%, #a8c97f 100%); /* 上传按键颜色 */
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(210, 224, 170, 0.3);
+        }
+        
+        .file-label:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(210, 224, 170, 0.4);
+        }
+        
+        .file-label i {
+            margin-right: 10px;
+        }
+        
+        .submit-btn {
+            padding: 16px 50px;
+            background: linear-gradient(135deg, #F98C53 0%, #f7a577 100%); /* 检索按钮颜色 */
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(249, 140, 83, 0.3);
+        }
+        
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(249, 140, 83, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        /* 预览区域 */
+        .preview-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            display: inline-block;
+        }
+        
+        .preview-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+        }
+        
+        .preview-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 10px;
+            border: 2px solid #FCCEB4;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* 错误信息 */
+        .error-message {
+            background: #ffe6e6;
+            color: #dc3545;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+            display: none;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #F98C53;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 结果区域 */
+        .results-section {
+            margin-top: 40px;
+            display: none;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #FCCEB4;
+        }
+        
+        .results-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .results-title i {
+            color: #F98C53;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+        }
+        
+        .result-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .result-info {
+            padding: 20px;
+        }
+        
+        .rank-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: linear-gradient(135deg, #F98C53 0%, #f7a577 100%);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 3px 15px rgba(249, 140, 83, 0.3);
+        }
+        
+        .score-bar {
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #F98C53 0%, #f7a577 100%); /* 相似度进度条颜色 */
+            border-radius: 4px;
+            width: 0%;
+        }
+        
+        .score-text {
+            font-size: 0.95rem;
+            color: #333;
+            text-align: right;
+            font-weight: 500;
+        }
+        
+        /* 返回按钮 */
+        .back-btn {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #FCCEB4 0%, #f8bca0 100%);
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(252, 206, 180, 0.3);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .navbar {
+                padding: 15px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-center {
+                order: 3;
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            .stats {
+                width: 100%;
+                justify-content: space-around;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .upload-section {
+                padding: 30px 20px;
+            }
+            
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 20px;
+            }
+            
+            .file-label, .submit-btn {
+                width: 100%;
+                margin: 10px 0;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航栏 -->
+        <div class="navbar">
+            <div class="nav-left">
+                <div class="logo-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>DINOv2 图像检索系统</h1>
+                    <p class="subtitle">基于深度学习的智能图片搜索</p>
+                </div>
+            </div>
+            
+            <div class="nav-center">
+                <div class="nav-tabs">
+                    <a href="/" class="nav-tab">
+                        <i class="fas fa-images"></i> 图库浏览
+                    </a>
+                    <a href="/search" class="nav-tab active">
+                        <i class="fas fa-camera"></i> 图片检索
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- 上传区域 -->
+            <div class="upload-section">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">
+                    <h2>上传图片开始检索</h2>
+                    <p>支持 JPG, PNG, GIF 格式，上传图片后系统将查找最相似的10张图片</p>
+                </div>
+                
+                <form method="post" enctype="multipart/form-data" class="upload-form" id="searchForm">
+                    <div class="file-input-wrapper">
+                        <input type="file" name="file" accept="image/*" id="fileInput" class="file-input" required>
+                        <label for="fileInput" class="file-label">
+                            <i class="fas fa-image"></i> 选择图片文件
+                        </label>
+                    </div>
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <i class="fas fa-search"></i> 开始检索
+                    </button>
+                </form>
+                
+                {% if query_img_url %}
+                <div class="preview-section">
+                    <div class="preview-title">查询图片预览：</div>
+                    <img src="{{ query_img_url }}" class="preview-image" alt="查询图片">
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 错误信息 -->
+            {% if error %}
+            <div class="error-message" id="errorMessage" style="display: block;">
+                <i class="fas fa-exclamation-circle"></i> {{ error }}
+            </div>
+            {% endif %}
+            
+            <!-- 加载动画 -->
+            <div class="loading" id="loadingSection">
+                <div class="loading-spinner"></div>
+                <p>正在检索中，请稍候...</p>
+            </div>
+            
+            <!-- 结果区域 -->
+            {% if results %}
+            <div class="results-section" id="resultsSection" style="display: block;">
+                <div class="results-header">
+                    <h2 class="results-title">
+                        <i class="fas fa-chart-bar"></i> 检索结果 (Top 10)
+                    </h2>
+                    <a href="/search" class="back-btn">
+                        <i class="fas fa-redo"></i> 重新检索
+                    </a>
+                </div>
+                <div class="results-grid" id="resultsGrid">
+                    {% for item in results %}
+                    <div class="result-card">
+                        <div class="rank-badge">{{ item.rank }}</div>
+                        <img src="/gallery/{{ item.image_id }}" 
+                             class="result-image" 
+                             alt="结果 {{ item.rank }}"
+                             onerror="handleImageError(this)">
+                        <div class="result-info">
+                            <div class="score-bar">
+                                <div class="score-fill" data-percent="{{ item.similarity_percent }}"></div>
+                            </div>
+                            <div class="score-text">相似度: {{ "%.2f"|format(item.similarity_percent) }}%</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+    // 初始化函数
+    function initializePage() {
+        // 初始化相似度条
+        const scoreFills = document.querySelectorAll('.score-fill');
+        scoreFills.forEach(fill => {
+            const percent = fill.getAttribute('data-percent');
+            if (percent && !isNaN(percent)) {
+                const validPercent = Math.min(Math.max(parseFloat(percent), 0), 100);
+                fill.style.width = '0%';
+                setTimeout(() => {
+                    fill.style.transition = 'width 1s ease-in-out';
+                    fill.style.width = validPercent + '%';
+                }, 100);
+            }
+        });
+        
+        // 如果有结果，显示结果区域
+        // 直接从HTML中检查resultsSection是否应该显示
+        const resultsSection = document.getElementById('resultsSection');
+        if (resultsSection && resultsSection.style.display === 'block') {
+            // 结果区域已经显示，不需要做其他事情
+        }
+    }
+    
+    // 图片加载错误处理
+    function handleImageError(imgElement) {
+        imgElement.onerror = null;
+        imgElement.src = 'https://via.placeholder.com/300x200/FCCEB4/333?text=图片加载中';
+    }
+    
+    // 显示错误信息
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage') || document.createElement('div');
+        if (!errorDiv.id) {
+            errorDiv.id = 'errorMessage';
+            errorDiv.className = 'error-message';
+            document.querySelector('.upload-section').after(errorDiv);
+        }
+        
+        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        errorDiv.style.display = 'block';
+        
+        // 5秒后自动隐藏
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
+    
+    // 文件选择处理
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const fileName = e.target.files[0]?.name;
+        const fileLabel = document.querySelector('.file-label');
+        if (fileName && fileLabel) {
+            const displayName = fileName.length > 20 ? 
+                fileName.substring(0, 20) + '...' : fileName;
+            fileLabel.innerHTML = `<i class="fas fa-image"></i> 已选择: ${displayName}`;
+            
+            // 显示预览
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewSection = document.createElement('div');
+                previewSection.className = 'preview-section';
+                previewSection.innerHTML = `
+                    <div class="preview-title">查询图片预览：</div>
+                    <img src="${e.target.result}" class="preview-image" alt="查询图片">
+                `;
+                
+                // 移除旧的预览
+                const oldPreview = document.querySelector('.preview-section');
+                if (oldPreview) oldPreview.remove();
+                
+                document.querySelector('.upload-form').after(previewSection);
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+    
+    // 表单提交处理
+    document.getElementById('searchForm').addEventListener('submit', function(e) {
+        const fileInput = document.getElementById('fileInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingSection = document.getElementById('loadingSection');
+        
+        if (fileInput.files.length === 0) {
+            e.preventDefault();
+            showError('请先选择图片文件');
+            return;
+        }
+        
+        // 禁用按钮并显示加载状态
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 检索中...';
+        
+        // 显示加载动画
+        if (loadingSection) {
+            loadingSection.style.display = 'block';
+        }
+        
+        // 隐藏之前的结果
+        const resultsSection = document.getElementById('resultsSection');
+        if (resultsSection) {
+            resultsSection.style.display = 'none';
+        }
+    });
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', initializePage);
+</script>

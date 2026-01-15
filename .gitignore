@@ -2,3 +2,8 @@ images/
 index/
 static/
 venv/
+*.npz
+data.csv
+AI_search
+*.pem
+id_*

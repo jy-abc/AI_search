@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DINOv2 图像检索系统 - 图库</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #F9F2EF; /* 背景色 */
+            color: #333; /* 文字黑色 */
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            background-color: #FCCEB4; /* 导航栏颜色 */
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            background: linear-gradient(135deg, #F98C53 0%, #FCCEB4 100%);
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .logo-text h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .logo-text .subtitle {
+            font-size: 0.95rem;
+            color: #666;
+            opacity: 0.8;
+        }
+        
+        .nav-center {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .nav-tabs {
+            display: inline-flex;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 5px;
+        }
+        
+        .nav-tab {
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #666;
+            text-decoration: none;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #333;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .nav-right {
+            display: flex;
+            gap: 25px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 25px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            padding: 40px;
+        }
+        
+        /* 图库展示区域 */
+        .gallery-section {
+            margin-bottom: 50px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #FCCEB4;
+        }
+        
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #F98C53;
+        }
+        
+        .refresh-btn {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #D2E0AA 0%, #a8c97f 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(210, 224, 170, 0.3);
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+        
+        .gallery-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .gallery-label {
+            padding: 12px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+            background: #fafafa;
+        }
+        
+        /* 快速检索入口 */
+        .quick-search-section {
+            background: linear-gradient(135deg, #FCCEB4 0%, rgba(252, 206, 180, 0.1) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .quick-search-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #F98C53 0%, #f7a577 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .quick-search-text h2 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .quick-search-text p {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+        
+        .search-btn {
+            padding: 16px 50px;
+            background: linear-gradient(135deg, #F98C53 0%, #f7a577 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(249, 140, 83, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(249, 140, 83, 0.4);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .navbar {
+                padding: 15px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-center {
+                order: 3;
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            .stats {
+                width: 100%;
+                justify-content: space-around;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+            
+            .quick-search-section {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航栏 -->
+        <div class="navbar">
+            <div class="nav-left">
+                <div class="logo-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>DINOv2 图像检索系统</h1>
+                    <p class="subtitle">基于深度学习的智能图片搜索</p>
+                </div>
+            </div>
+            
+            <div class="nav-center">
+                <div class="nav-tabs">
+                    <a href="/" class="nav-tab active">
+                        <i class="fas fa-images"></i> 图库浏览
+                    </a>
+                    <a href="/search" class="nav-tab">
+                        <i class="fas fa-camera"></i> 图片检索
+                    </a>
+                </div>
+            </div>
+            
+            <div class="nav-right">
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ gallery_images|length if gallery_images else 0 }}</div>
+                        <div class="stat-label">示例图片</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- 图库展示区域 -->
+            <div class="gallery-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-images"></i> 图库示例
+                        <span id="galleryCount">({{ gallery_images|length if gallery_images else 0 }}张)</span>
+                    </h2>
+                    <div class="section-actions">
+                        <button class="refresh-btn" onclick="refreshGallery()" title="刷新随机图片">
+                            <i class="fas fa-sync-alt"></i> 换一批
+                        </button>
+                    </div>
+                </div>
+                <div class="gallery-grid" id="galleryGrid">
+                    {% if gallery_images %}
+                        {% for image in gallery_images %}
+                        <div class="gallery-item">
+                            <img src="{{ image.url }}" 
+                                 class="gallery-image" 
+                                 alt="随机图片 {{ loop.index }}"
+                                 onerror="handleImageError(this)"
+                                 onclick="previewGalleryImage('{{ image.filename }}')">
+                            <div class="gallery-label">图片 {{ loop.index }}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
+                            <i class="fas fa-image" style="font-size: 48px; margin-bottom: 20px; color: #FCCEB4;"></i>
+                            <p>暂无图片数据</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 快速检索入口 -->
+            <div class="quick-search-section">
+                <div class="quick-search-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <div class="quick-search-text">
+                    <h2>开始图片检索</h2>
+                    <p>上传您的图片，系统将为您查找最相似的10张图片</p>
+                    <a href="/search" class="search-btn">
+                        <i class="fas fa-search"></i> 开始检索
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 刷新图库
+        async function refreshGallery() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            const galleryGrid = document.getElementById('galleryGrid');
+            
+            if (refreshBtn && galleryGrid) {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刷新中...';
+                
+                try {
+                    // 从服务器获取新的随机图片
+                    const response = await fetch('/api/random_images?count=50');
+                    if (!response.ok) {
+                        throw new Error('获取随机图片失败');
+                    }
+                    
+                    const data = await response.json();
+                    if (data.success && data.images.length > 0) {
+                        // 清空当前图库
+                        galleryGrid.innerHTML = '';
+                        
+                        // 更新图片数量显示
+                        document.getElementById('galleryCount').textContent = `(${data.images.length}张)`;
+                        
+                        // 添加新的图片到图库
+                        data.images.forEach((image, index) => {
+                            const galleryItem = document.createElement('div');
+                            galleryItem.className = 'gallery-item';
+                            galleryItem.innerHTML = `
+                                <img src="${image.url}" 
+                                     class="gallery-image" 
+                                     alt="随机图片 ${index + 1}"
+                                     onerror="handleImageError(this)"
+                                     onclick="previewGalleryImage('${image.filename}')">
+                                <div class="gallery-label">图片 ${index + 1}</div>
+                            `;
+                            galleryGrid.appendChild(galleryItem);
+                        });
+                    }
+                } catch (error) {
+                    console.log('刷新图库时出错:', error);
+                    alert('刷新图库失败，请稍后重试');
+                } finally {
+                    refreshBtn.disabled = false;
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 换一批';
+                }
+            }
+        }
+        
+        // 预览图库图片
+        function previewGalleryImage(filename) {
+            // 创建模态框预览大图
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                cursor: pointer;
+            `;
+            
+            modal.innerHTML = `
+                <div style="max-width: 90%; max-height: 90%;">
+                    <img src="/gallery/${filename}" 
+                         style="max-width: 100%; max-height: 100%; border-radius: 10px;"
+                         alt="大图预览">
+                    <div style="color: white; text-align: center; margin-top: 15px;">
+                        点击任意位置关闭预览
+                    </div>
+                </div>
+            `;
+            
+            modal.onclick = () => document.body.removeChild(modal);
+            document.body.appendChild(modal);
+        }
+        
+        // 图片加载错误处理
+        function handleImageError(imgElement) {
+            imgElement.onerror = null;
+            imgElement.src = 'https://via.placeholder.com/300x200/FCCEB4/333?text=图片加载中';
+        }
+    </script>
+</body>
+</html>
